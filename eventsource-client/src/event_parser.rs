@@ -12,6 +12,7 @@ struct EventData {
     pub data: String,
     pub id: Option<String>,
     pub retry: Option<u64>,
+    pub ts: Option<u64>,
 }
 
 impl EventData {
@@ -60,12 +61,14 @@ impl TryFrom<EventData> for Option<SSE> {
         let id = event_data.id.clone();
 
         let retry = event_data.retry;
+        let ts = event_data.ts;
 
         Ok(Some(SSE::Event(Event {
             event_type,
             data,
             id,
             retry,
+            ts,
         })))
     }
 }
@@ -76,6 +79,7 @@ pub struct Event {
     pub data: String,
     pub id: Option<String>,
     pub retry: Option<u64>,
+    pub ts: Option<u64>,
 }
 
 const LOGIFY_MAX_CHARS: usize = 100;
@@ -237,6 +241,13 @@ impl EventParser {
                                 event_data.retry = Some(retry);
                             }
                             _ => debug!("Failed to parse {:?} into retry value", value),
+                        };
+                    } else if key == "ts" {
+                        match value.parse::<u64>() {
+                            Ok(ts) => {
+                                event_data.ts = Some(ts);
+                            }
+                            _ => debug!("Failed to parse {:?} into ts value", value),
                         };
                     }
                 }
@@ -454,6 +465,7 @@ mod tests {
             id: None,
             event_type: typ.to_string(),
             retry: None,
+            ts: None,
         })
     }
 
@@ -463,6 +475,7 @@ mod tests {
             id: Some(id.to_string()),
             event_type: typ.to_string(),
             retry: None,
+            ts: None,
         })
     }
 
